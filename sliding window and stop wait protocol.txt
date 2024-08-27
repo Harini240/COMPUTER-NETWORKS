@@ -1,0 +1,76 @@
+import java.util.Random;
+import java.util.Scanner;
+
+public class ProtocolDemo {
+    static Random random = new Random();
+
+    static boolean receiveAck() {
+        return random.nextDouble() < 0.7;  // 70% chance of receiving ACK
+    }
+
+    static void stopAndWaitProtocol(String[] frames) {
+        System.out.println("Stop-and-Wait Protocol:");
+        for (String frame : frames) {
+            System.out.println("Sending: " + frame);
+            while (!receiveAck()) {
+                System.out.println("No ACK for " + frame + ", resending...");
+                System.out.println("Sending: " + frame);
+            }
+            System.out.println("ACK received for " + frame);
+        }
+    }
+
+    static void slidingWindowProtocol(String[] frames, int windowSize) {
+        System.out.println("\nSliding Window Protocol:");
+        int totalFrames = frames.length;
+        int windowStart = 0;
+
+        while (windowStart < totalFrames) {
+            int windowEnd = Math.min(windowStart + windowSize, totalFrames);
+            System.out.print("Sending frames: ");
+            for (int i = windowStart; i < windowEnd; i++) {
+                System.out.print(frames[i] + " ");
+            }
+            System.out.println();
+
+            int ackCount = 0;
+            for (int i = windowStart; i < windowEnd; i++) {
+                if (receiveAck()) {
+                    ackCount++;
+                } else {
+                    System.out.println("No ACK for " + frames[i]);
+                    break;
+                }
+            }
+
+            if (ackCount == (windowEnd - windowStart)) {
+                System.out.println("ACKs received for all frames in the window.");
+                windowStart = windowEnd;
+            } else {
+                System.out.println("Resending window starting from frame: " + frames[windowStart]);
+            }
+            System.out.println();
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the number of frames: ");
+        int numFrames = scanner.nextInt();
+        scanner.nextLine();  // Consume newline
+
+        String[] frames = new String[numFrames];
+        for (int i = 0; i < numFrames; i++) {
+            System.out.print("Enter frame " + (i + 1) + ": ");
+            frames[i] = scanner.nextLine();
+        }
+
+        stopAndWaitProtocol(frames);
+
+        System.out.print("\nEnter the window size for Sliding Window Protocol: ");
+        int windowSize = scanner.nextInt();
+
+        slidingWindowProtocol(frames, windowSize);
+    }
+}
